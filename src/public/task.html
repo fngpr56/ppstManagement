@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Management</title>
+</head>
+<body>
+    <iframe src="navbar.html"></iframe>
+
+    <h1>Add Task</h1>
+    <form id="taskForm">
+        <label for="productId">Product ID:</label>
+        <input type="number" id="productId" name="product_id" required />
+
+        <label for="taskTitle">Task Title:</label>
+        <input type="text" id="taskTitle" name="title" required />
+
+        <label for="dueDate">Due Date:</label>
+        <input type="date" id="dueDate" name="due_date" />
+
+        <button type="submit">Add Task</button>
+    </form>
+
+    <h1>Update Task</h1>
+    <form id="updateTaskForm">
+        <label for="updateTaskId">Task ID:</label>
+        <input type="number" id="updateTaskId" required />
+
+        <label for="updateProductId">New Product ID:</label>
+        <input type="number" id="updateProductId" required />
+
+        <label for="updateTaskTitle">New Task Title:</label>
+        <input type="text" id="updateTaskTitle" required />
+
+        <label for="updateDueDate">New Due Date:</label>
+        <input type="date" id="updateDueDate" />
+
+        <button type="submit">Update Task</button>
+    </form>
+
+
+    <h1>Tasks</h1>
+    <table id="taskTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Product Name</th>
+                <th>Title</th>
+                <th>Due Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+let tasksData = []; // Store fetched tasks globally for easy manipulation
+
+// Function to render tasks table
+const renderTasksTable = () => {
+    const tableBody = document.querySelector("#taskTable tbody");
+    tableBody.innerHTML = ""; // Clear existing rows
+
+    tasksData.forEach((task) => {
+        const formattedDate = task.due_date || "N/A";
+
+        const row = `
+            <tr data-task-id="${task.id}">
+                <td>${task.id}</td>
+                <td>${task.product_name}</td>
+                <td>${task.title}</td>
+                <td>${formattedDate}</td>
+                <td>
+                    <button onclick="deleteTask(${task.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+        tableBody.innerHTML += row;
+    });
+};
+
+// Fetch all tasks
+const fetchTasks = async () => {
+    try {
+        const response = await fetch("/selectTasks");
+        tasksData = await response.json(); // Update global tasks data
+        renderTasksTable();
+    } catch (error) {
+        console.error("Error fetching tasks:", error.message);
+    }
+};
+
+// Add Task
+document.getElementById("taskForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const product_id = document.getElementById("productId").value;
+    const title = document.getElementById("taskTitle").value;
+    const due_date = document.getElementById("dueDate").value;
+
+    try {
+        const response = await fetch("/insertTask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ product_id, title, due_date }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            const formattedDate = due_date ? new Date(due_date).toISOString().slice(0, 10) : "N/A";
+
+            // Dynamically append the new row to the table
+            const tableBody = document.querySelector("#taskTable tbody");
+            const newRow = `
+                <tr data-task-id="${result.taskId}">
+                    <td>${result.taskId}</td>
+                    <td>${result.productName}</td> <!-- Display product name -->
+                    <td>${title}</td>
+                    <td>${formattedDate}</td>
+                    <td>
+                        <button onclick="deleteTask(${result.taskId})">Delete</button>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += newRow;
+
+            // Clear form fields
+            document.getElementById("taskForm").reset();
+        } else {
+            console.error("Error adding task:", result.error);
+        }
+    } catch (error) {
+        console.error("Error inserting task:", error.message);
+    }
+});
+
+
+// Update Task
+document.getElementById("updateTaskForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = document.getElementById("updateTaskId").value;
+    const product_id = document.getElementById("updateProductId").value;
+    const title = document.getElementById("updateTaskTitle").value;
+    const due_date = document.getElementById("updateDueDate").value;
+
+    try {
+        const response = await fetch("/updateTask", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, product_id, title, due_date }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            const formattedDate = result.due_date || "N/A";
+
+            // Find and update the row in the table
+            const row = document.querySelector(`tr[data-task-id="${id}"]`);
+            if (row) {
+                row.innerHTML = `
+                    <td>${id}</td>
+                    <td>${result.productName}</td> <!-- Updated product name -->
+                    <td>${title}</td>
+                    <td>${formattedDate}</td>
+                    <td>
+                        <button onclick="deleteTask(${id})">Delete</button>
+                    </td>
+                `;
+            } else {
+                console.error("Row not found for updating.");
+            }
+
+            document.getElementById("updateTaskForm").reset();
+        } else {
+            console.error("Error updating task:", result.error);
+        }
+    } catch (error) {
+        console.error("Error updating task:", error.message);
+    }
+});
+
+
+// Delete Task
+const deleteTask = async (id) => {
+    try {
+        const response = await fetch(`/deleteTask/${id}`, { method: "DELETE" });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            // Remove task from tasksData and re-render table
+            tasksData = tasksData.filter((task) => task.id != id);
+            renderTasksTable();
+        } else {
+            console.error("Error deleting task:", result.error);
+        }
+    } catch (error) {
+        console.error("Error deleting task:", error.message);
+    }
+};
+
+// Fetch and render tasks on page load
+window.addEventListener("DOMContentLoaded", fetchTasks);
+    </script>
+</body>
+</html>

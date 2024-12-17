@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project</title>
+</head>
+
+<body>
+    <iframe src="navbar.html"></iframe>
+    <h1>Добавление проекта</h1>
+    <form id="projectForm">
+        <label for="name">Название проекта:</label>
+        <input type="text" id="name" name="name" required />
+        <button type="submit">Отправить</button>
+    </form>
+
+    <div id="responseMessage"></div>
+
+    <h1>Обновление проекта</h1>
+    <form id="updateProjectForm">
+        <label for="projectId">ID проекта:</label>
+        <input type="number" id="projectId" name="id" required />
+
+        <label for="newName">Новое название проекта:</label>
+        <input type="text" id="newName" name="name" required />
+
+        <button type="submit">Обновить</button>
+    </form>
+
+    <div id="updateResponseMessage"></div>
+
+    <h1>JSON Data in Table</h1>
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>!</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        // Обработчик отправки insert
+        const form = document.getElementById("projectForm");
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const tableBody = document
+                .getElementById("dataTable")
+                .getElementsByTagName("tbody")[0];
+            const name = document.getElementById("name").value;
+            const newRow = document.createElement("tr");
+
+            try {
+                const response = await fetch("http://localhost:3000/insertProject", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ name }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById(
+                        "responseMessage"
+                    ).innerHTML = `<p style="color:green;">${result.message}. ID: ${result.projectId}</p>`;
+                    newRow.innerHTML = `
+                    <td>${result.projectId}</td>
+                    <td>${name}</td>
+                    <td><button onclick="deleteProject(${result.projectId}, this)">Delete</button></td>
+                    `;
+                    tableBody.appendChild(newRow);
+                } else {
+                    document.getElementById(
+                        "responseMessage"
+                    ).innerHTML = `<p style="color:red;">Ошибка: ${result.error}</p>`;
+                }
+            } catch (error) {
+                console.error("Ошибка:", error);
+                document.getElementById(
+                    "responseMessage"
+                ).innerHTML = `<p style="color:red;">Ошибка при отправке данных на сервер.</p>`;
+            }
+        });
+
+        // Обработчик отправки формы update
+        const updateForm = document.getElementById("updateProjectForm");
+        updateForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById("projectId").value;
+            const name = document.getElementById("newName").value;
+
+            //
+            const rows = document.querySelectorAll("#dataTable tbody tr");
+
+
+            try {
+                const response = await fetch("http://localhost:3000/updateProject", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ id, name }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById(
+                        "updateResponseMessage"
+                    ).innerHTML = `<p style="color:green;">${result.message}</p>`;
+
+                    rows.forEach(row => {
+    const idCell = row.children[0];
+    if (idCell.textContent == id) {
+        row.children[1].textContent = name; 
+    }
+});
+
+                } else {
+                    document.getElementById(
+                        "updateResponseMessage"
+                    ).innerHTML = `<p style="color:red;">Ошибка: ${result.error}</p>`;
+                }
+            } catch (error) {
+                console.error("Ошибка:", error);
+                document.getElementById(
+                    "updateResponseMessage"
+                ).innerHTML = `<p style="color:red;">Ошибка при отправке данных на сервер.</p>`;
+            }
+        });
+
+        // delete
+
+        async function deleteProject(id, button) {
+            //if (!confirm("Вы уверены, что хотите удалить этот проект?")) return;
+
+            try {
+                const response = await fetch(
+                    `http://localhost:3000/deleteProject/${id}`,
+                    {
+                        method: "DELETE",
+                    }
+                );
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    const row = button.closest("tr");
+                    row.remove();
+                    //alert(result.message);
+                } else {
+                    alert(`Ошибка: ${result.error}`);
+                }
+            } catch (error) {
+                console.error("Ошибка при удалении проекта:", error.message);
+                alert("Ошибка при удалении проекта.");
+            }
+        }
+
+        // fetch
+
+        const url = "http://localhost:3000/selectProject";
+
+        async function fetchAndDisplayData() {
+            try {
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log("Fetched Data:", data);
+
+                const tableBody = document
+                    .getElementById("dataTable")
+                    .getElementsByTagName("tbody")[0];
+
+                data.forEach((item) => {
+                    const row = document.createElement("tr");
+
+                    row.innerHTML = `
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td><button onclick="deleteProject(${item.id}, this)">Delete</button></td>
+                    `;
+
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error("Error fetching data:", error.message);
+            }
+        }
+
+        fetchAndDisplayData();
+    </script>
+</body>
+
+</html>

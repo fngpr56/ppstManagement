@@ -2,9 +2,10 @@ import express from "express";
 import dotenv from "dotenv";
 import { notFound } from "./src/middlewares/notFound.js";
 import { handleError } from "./src/middlewares/handleError.js";
-import notesRoute from "./routes.js";
+import routes from "./routes.js";
 import cors from "cors";
 import path from "path";
+
 dotenv.config();
 
 const app = express();
@@ -18,25 +19,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// frontend
-const publicDir = path.resolve("./src/public");
-app.use(express.static(publicDir));
+app.use(express.static(path.join(path.resolve(), "src", "public")));
 
-// router
-app.use("/", notesRoute);
+// routes
+app.use("/", routes);
 
-// project
-
-app.post("/insertProject", (req, res) => {
-  const { name } = req.body;
-
-  if (!name) {
-    return res.status(400).json({ error: "Поле 'name' обязательно для заполнения" });
-  }
-
-  res.status(201).json({ message: `Проект '${name}' успешно добавлен!` });
-});
-
+// middleware
 app.use(notFound);
 app.use(handleError);
 

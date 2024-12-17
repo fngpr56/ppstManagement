@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management</title>
+</head>
+<body>
+    <iframe src="navbar.html"></iframe>
+
+    <h1>Add Product</h1>
+    <form id="productForm">
+        <label for="projectId">Project ID:</label>
+        <input type="number" id="projectId" name="projectId" required />
+
+        <label for="productName">Product Name:</label>
+        <input type="text" id="productName" name="name" required />
+
+        <button type="submit">Add Product</button>
+    </form>
+
+    <h1>Update Product</h1>
+    <form id="updateProductForm">
+        <label for="updateProductId">Product ID:</label>
+        <input type="number" id="updateProductId" name="id" required />
+    
+        <label for="updateProductName">New Product Name:</label>
+        <input type="text" id="updateProductName" name="name" required />
+    
+        <label for="updateProjectId">New Project ID:</label>
+        <input type="number" id="updateProjectId" name="project_id" required />
+    
+        <button type="submit">Update Product</button>
+    </form>
+
+    <h1>Products</h1>
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Project Name</th>
+                <th>Product Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    
+
+
+    <script>
+        const fetchAndDisplayProducts = async () => {
+            const response = await fetch("/selectProducts");
+            const products = await response.json();
+
+            const tableBody = document.querySelector("#productTable tbody");
+            tableBody.innerHTML = "";
+            products.forEach(product => {
+                const row = `
+                    <tr>
+                        <td>${product.id}</td>
+                        <td>${product.project_name}</td>
+                        <td>${product.name}</td>
+                        <td>
+                            <button onclick="deleteProduct(${product.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        };
+
+        document.getElementById("productForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const project_id = document.getElementById("projectId").value;
+            const name = document.getElementById("productName").value;
+
+            const response = await fetch("/insertProduct", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ project_id, name }),
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            fetchAndDisplayProducts();
+        });
+
+        const deleteProduct = async (id) => {
+            await fetch(`/deleteProduct/${id}`, { method: "DELETE" });
+            fetchAndDisplayProducts();
+        };
+
+        fetchAndDisplayProducts();
+
+        document
+    .getElementById("updateProductForm")
+    .addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById("updateProductId").value;
+        const name = document.getElementById("updateProductName").value;
+        const project_id = document.getElementById("updateProjectId").value;
+
+        try {
+            const response = await fetch("/updateProduct", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, name, project_id }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                document.getElementById("updateResponseMessage").innerHTML = `<p style="color:green;">${result.message}</p>`;
+                fetchAndDisplayProducts();  // Refresh the product list
+            } else {
+                document.getElementById("updateResponseMessage").innerHTML = `<p style="color:red;">Error: ${result.error}</p>`;
+            }
+        } catch (error) {
+            console.error("Error updating product:", error);
+            document.getElementById("updateResponseMessage").innerHTML = `<p style="color:red;">Error updating product.</p>`;
+        }
+    });
+
+
+    </script>
+</body>
+</html>

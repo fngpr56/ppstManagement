@@ -4,19 +4,16 @@ import { tryCatchWrapper } from "../middlewares/tryCatchWrapper.js";
 
 // select
 
-export async function selectProjects() {
+  export async function selectProjects(req, res, next) {
     try {
-      const sql = "SELECT * FROM projects";
-      const [rows] = await pool.query(sql);
-      if (rows.length === 0) {
-        throw new Error("Таблица 'notes' пуста");
-      }
-      return rows;
+        const sql = "SELECT * FROM projects";
+        const [rows] = await pool.query(sql);
+        res.status(200).json(rows);
     } catch (error) {
-      console.error("Ошибка в getNote:", error.message);
-      throw new Error("Ошибка при получении данных из базы");
+        console.error("Error fetching products:", error.message);
+        next(error);
     }
-  }
+}
 
 //insert
 
