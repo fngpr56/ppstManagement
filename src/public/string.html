@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Management</title>
+</head>
+<body>
+    <iframe src="navbar.html"></iframe>
+
+    <h1>Add String</h1>
+    <form id="stringForm">
+        <label for="taskId">Task ID:</label>
+        <input type="number" id="taskId" name="task_id" required />
+
+        <label for="content">String Content:</label>
+        <input type="text" id="content" name="content" required />
+
+        <button type="submit">Add String</button>
+    </form>
+
+    <h1>Strings</h1>
+    <table id="stringTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Task Title</th>
+                <th>Content</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        let stringsData = [];
+
+        const renderStringsTable = () => {
+            const tableBody = document.querySelector("#stringTable tbody");
+            tableBody.innerHTML = "";
+
+            stringsData.forEach((string) => {
+                const row = `
+                    <tr data-string-id="${string.id}">
+                        <td>${string.id}</td>
+                        <td>${string.task_title}</td>
+                        <td>${string.content}</td>
+                        <td>
+                            <button onclick="deleteString(${string.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        };
+
+        const fetchStrings = async () => {
+            try {
+                const response = await fetch("/selectStrings");
+                stringsData = await response.json();
+                renderStringsTable();
+            } catch (error) {
+                console.error("Error fetching strings:", error.message);
+            }
+        };
+
+        document.getElementById("stringForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const task_id = document.getElementById("taskId").value;
+            const content = document.getElementById("content").value;
+
+            try {
+                const response = await fetch("/insertString", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ task_id, content }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    fetchStrings();
+                    document.getElementById("stringForm").reset();
+                } else {
+                    console.error("Error adding string:", result.error);
+                }
+            } catch (error) {
+                console.error("Error inserting string:", error.message);
+            }
+        });
+
+        const deleteString = async (id) => {
+            try {
+                const response = await fetch(`/deleteString/${id}`, { method: "DELETE" });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    stringsData = stringsData.filter((string) => string.id != id);
+                    renderStringsTable();
+                } else {
+                    console.error("Error deleting string:", result.error);
+                }
+            } catch (error) {
+                console.error("Error deleting string:", error.message);
+            }
+        };
+
+        window.addEventListener("DOMContentLoaded", fetchStrings);
+    </script>
+</body>
+</html>

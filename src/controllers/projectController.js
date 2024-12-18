@@ -1,6 +1,4 @@
 import { pool } from "../db/connect.js";
-import { createCustomError } from "../errors/customErrors.js";
-import { tryCatchWrapper } from "../middlewares/tryCatchWrapper.js";
 
 // select
 
@@ -78,16 +76,13 @@ export async function deleteProject(req, res) {
     try {
         const { id } = req.params;
 
-        // Check if ID is provided
         if (!id) {
             return res.status(400).json({ error: "ID обязателен для удаления" });
         }
 
-        // SQL query to delete the project by ID
         const sql = "DELETE FROM projects WHERE id = ?";
         const [result] = await pool.query(sql, [id]);
 
-        // Check if any row was deleted
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: "Проект с таким ID не найден" });
         }

@@ -44,7 +44,7 @@
     </table>
 
     <script>
-        // Обработчик отправки insert
+        // insert
         const form = document.getElementById("projectForm");
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -89,7 +89,6 @@
             }
         });
 
-        // Обработчик отправки формы update
         const updateForm = document.getElementById("updateProjectForm");
         updateForm.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -140,7 +139,6 @@
         // delete
 
         async function deleteProject(id, button) {
-            //if (!confirm("Вы уверены, что хотите удалить этот проект?")) return;
 
             try {
                 const response = await fetch(
@@ -155,7 +153,6 @@
                 if (response.ok) {
                     const row = button.closest("tr");
                     row.remove();
-                    //alert(result.message);
                 } else {
                     alert(`Ошибка: ${result.error}`);
                 }

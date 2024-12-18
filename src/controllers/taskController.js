@@ -1,6 +1,6 @@
 import { pool } from "../db/connect.js";
 
-// select all tasks with product name
+// select
 export async function selectTasks(req, res, next) {
     try {
         const sql = `
@@ -21,21 +21,18 @@ export async function selectTasks(req, res, next) {
 }
 
 
-// insert task
+// insert
 export async function insertTask(req, res, next) {
     try {
         const { product_id, title, due_date } = req.body;
 
-        // Input validation
         if (!product_id || !title) {
             return res.status(400).json({ error: "'product_id' and 'title' are required." });
         }
 
-        // Insert the task
         const sqlInsert = "INSERT INTO tasks (product_id, title, due_date) VALUES (?, ?, ?)";
         const [result] = await pool.query(sqlInsert, [product_id, title, due_date]);
 
-        // Fetch the product name
         const sqlFetchProduct = "SELECT name FROM products WHERE id = ?";
         const [product] = await pool.query(sqlFetchProduct, [product_id]);
 
@@ -43,11 +40,10 @@ export async function insertTask(req, res, next) {
             return res.status(404).json({ error: "Product not found." });
         }
 
-        // Return response with product name
         res.status(201).json({
             message: `Task '${title}' added successfully!`,
             taskId: result.insertId,
-            productName: product[0].name, // Product name
+            productName: product[0].name,
         });
     } catch (error) {
         console.error("Error inserting task:", error.message);
@@ -56,7 +52,7 @@ export async function insertTask(req, res, next) {
 }
 
 
-// update task
+// update
 export async function updateTask(req, res, next) {
     try {
         const { id, product_id, title, due_date } = req.body;
@@ -71,7 +67,6 @@ export async function updateTask(req, res, next) {
             ? new Date(due_date).toISOString().slice(0, 10)
             : null;
 
-        // Update task
         const sqlUpdate = `
             UPDATE tasks 
             SET title = ?, product_id = ?, due_date = ?
@@ -83,7 +78,6 @@ export async function updateTask(req, res, next) {
             return res.status(404).json({ error: "Task not found." });
         }
 
-        // Fetch the product name
         const sqlProduct = "SELECT name FROM products WHERE id = ?";
         const [product] = await pool.query(sqlProduct, [product_id]);
 
@@ -93,7 +87,7 @@ export async function updateTask(req, res, next) {
 
         res.status(200).json({
             message: `Task ID ${id} updated successfully!`,
-            productName: product[0].name, // Return updated product name
+            productName: product[0].name,
             title,
             due_date: formattedDate,
         });
@@ -103,9 +97,8 @@ export async function updateTask(req, res, next) {
     }
 }
 
+// delete 
 
-
-// delete task
 export async function deleteTask(req, res, next) {
     try {
         const { id } = req.params;

@@ -1,6 +1,7 @@
 import { pool } from "../db/connect.js";
 
-// Select all products
+// select
+
 export async function selectProducts(req, res, next) {
     try {
         const sql = `
@@ -15,7 +16,8 @@ export async function selectProducts(req, res, next) {
     }
 }
 
-// Insert a new product
+// insert
+
 export async function insertProduct(req, res, next) {
     try {
         const { project_id, name } = req.body;
@@ -35,6 +37,8 @@ export async function insertProduct(req, res, next) {
         next(error);
     }
 }
+
+// update
 
 export async function updateProduct(req, res, next) {
     try {
@@ -61,7 +65,7 @@ export async function updateProduct(req, res, next) {
 }
 
 
-// Delete a product
+// delete
 export async function deleteProduct(req, res, next) {
     try {
         const { id } = req.params;

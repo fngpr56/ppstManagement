@@ -55,12 +55,11 @@
     </table>
 
     <script>
-let tasksData = []; // Store fetched tasks globally for easy manipulation
+let tasksData = [];
 
-// Function to render tasks table
 const renderTasksTable = () => {
     const tableBody = document.querySelector("#taskTable tbody");
-    tableBody.innerHTML = ""; // Clear existing rows
+    tableBody.innerHTML = "";
 
     tasksData.forEach((task) => {
         const formattedDate = task.due_date || "N/A";
@@ -80,18 +79,18 @@ const renderTasksTable = () => {
     });
 };
 
-// Fetch all tasks
+// fetch
 const fetchTasks = async () => {
     try {
         const response = await fetch("/selectTasks");
-        tasksData = await response.json(); // Update global tasks data
+        tasksData = await response.json();
         renderTasksTable();
     } catch (error) {
         console.error("Error fetching tasks:", error.message);
     }
 };
 
-// Add Task
+// add
 document.getElementById("taskForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const product_id = document.getElementById("productId").value;
@@ -110,7 +109,6 @@ document.getElementById("taskForm").addEventListener("submit", async (e) => {
         if (response.ok) {
             const formattedDate = due_date ? new Date(due_date).toISOString().slice(0, 10) : "N/A";
 
-            // Dynamically append the new row to the table
             const tableBody = document.querySelector("#taskTable tbody");
             const newRow = `
                 <tr data-task-id="${result.taskId}">
@@ -125,7 +123,6 @@ document.getElementById("taskForm").addEventListener("submit", async (e) => {
             `;
             tableBody.innerHTML += newRow;
 
-            // Clear form fields
             document.getElementById("taskForm").reset();
         } else {
             console.error("Error adding task:", result.error);
@@ -136,7 +133,7 @@ document.getElementById("taskForm").addEventListener("submit", async (e) => {
 });
 
 
-// Update Task
+// update 
 document.getElementById("updateTaskForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const id = document.getElementById("updateTaskId").value;
@@ -156,7 +153,6 @@ document.getElementById("updateTaskForm").addEventListener("submit", async (e) =
         if (response.ok) {
             const formattedDate = result.due_date || "N/A";
 
-            // Find and update the row in the table
             const row = document.querySelector(`tr[data-task-id="${id}"]`);
             if (row) {
                 row.innerHTML = `
@@ -182,7 +178,7 @@ document.getElementById("updateTaskForm").addEventListener("submit", async (e) =
 });
 
 
-// Delete Task
+// delete
 const deleteTask = async (id) => {
     try {
         const response = await fetch(`/deleteTask/${id}`, { method: "DELETE" });
@@ -190,7 +186,6 @@ const deleteTask = async (id) => {
         const result = await response.json();
 
         if (response.ok) {
-            // Remove task from tasksData and re-render table
             tasksData = tasksData.filter((task) => task.id != id);
             renderTasksTable();
         } else {
@@ -201,7 +196,6 @@ const deleteTask = async (id) => {
     }
 };
 
-// Fetch and render tasks on page load
 window.addEventListener("DOMContentLoaded", fetchTasks);
     </script>
 </body>
